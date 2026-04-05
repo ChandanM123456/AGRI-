@@ -1,0 +1,45 @@
+crop,day,task,medicine
+Tomato,1,Soil Preparation,None
+Tomato,5,Seed Sowing,None
+Tomato,10,Watering,None
+Tomato,20,Fertilizer,NPK
+Tomato,30,Pest Control,Pesticide A
+Tomato,45,Weeding,None
+Tomato,60,Second Fertilizer,NPK
+Tomato,75,Final Irrigation,None
+Maize,1,Land Preparation,None
+Maize,7,Sowing,None
+Maize,15,Irrigation,None
+Maize,25,Fertilizer,Urea
+Maize,40,Pest Control,Pesticide B
+Maize,60,Top Dressing,Urea
+Maize,80,Harvest Preparation,None
+Cabbage,1,Soil Preparation,None
+Cabbage,5,Seedling Transplant,None
+Cabbage,12,Watering,None
+Cabbage,25,Fertilizer,Phosphorus Mix
+Cabbage,35,Pest Control,Pesticide C
+Cabbage,50,Weeding,None
+Cabbage,65,Final Irrigation,None
+Onion,1,Field Ploughing,None
+Onion,7,Sowing,None
+Onion,20,Irrigation,None
+Onion,35,Fertilizer,Potash Mix
+Onion,55,Top Dressing,None
+Onion,75,Pest Control,Pesticide D
+Onion,100,Harvest Preparation,None
+Potato,1,Soil Preparation,None
+Potato,7,Seed Cutting,None
+Potato,14,Sowing,None
+Potato,30,Irrigation,None
+Potato,45,Fertilizer,Potash Mix
+Potato,70,Pest Control,Pesticide E
+Potato,90,Harvest Preparation,None
+Sugarcane,1,Land Preparation,None
+Sugarcane,15,Planting,None
+Sugarcane,30,First Irrigation,None
+Sugarcane,60,Fertilizer,NPK
+Sugarcane,90,Pest Control,Pesticide F
+Sugarcane,120,Water Management,None
+Sugarcane,180,Second Fertilizer,NPK
+Sugarcane,240,Harvest Preparation,None

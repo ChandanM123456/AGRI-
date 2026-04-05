@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FarmAdvisor{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin: 2rem 0;">
+    <h1>Welcome, {{ name }}! 🌾</h1>
+    <p style="color: #7f8c8d;">Manage your farming activities and grow smarter</p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <h3>Active Crops</h3>
+        <div class="value">{{ active_crops|length }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Expected Profit</h3>
+        <div class="value">₹{{ "{:,.0f}".format(total_profit) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Land Area</h3>
+        <div class="value">{{ current_user.land_area_hectares or 0 }} ha</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>📊 Your Active Crop Plans</h2>
+    {% if active_crops %}
+        {% for crop in active_crops %}
+        <div class="crop-card">
+            <h3>{{ crop.crop_name }}</h3>
+            <div class="crop-info">
+                <div class="crop-info-item">
+                    <strong>Start Date:</strong> {{ crop.start_date.strftime('%Y-%m-%d') }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>End Date:</strong> {{ crop.end_date.strftime('%Y-%m-%d') if crop.end_date else 'TBD' }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>Budget:</strong> ₹{{ "{:,.0f}".format(crop.budget) }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>Area:</strong> {{ crop.area_hectares }} ha
+                </div>
+                <div class="crop-info-item">
+                    <strong>Soil Quality:</strong> {{ crop.soil_quality }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>Water Source:</strong> {{ crop.water_source }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>Expected Profit:</strong> ₹{{ "{:,.0f}".format(crop.expected_profit) }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>Status:</strong> <span style="color: #27ae60;">{{ crop.status }}</span>
+                </div>
+            </div>
+            <div style="margin-top: 1rem;">
+                <a href="{{ url_for('crop_detail', plan_id=crop.id) }}" class="btn btn-primary">View Details</a>
+                <a href="{{ url_for('selling_guide', plan_id=crop.id) }}" class="btn btn-secondary">Selling Guide</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="text-align: center; color: #7f8c8d;">No active crop plans yet. <a href="{{ url_for('land_analysis') }}">Create one now!</a></p>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin: 2rem 0;">
+    <a href="{{ url_for('land_analysis') }}" class="btn btn-primary btn-block" style="max-width: 300px;">Start New Crop Plan</a>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Details - FarmAdvisor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🌾 {{ plan.crop_name }} - Daily Management Guide</h2>
+    <p style="color: #7f8c8d;">Plan Duration: {{ plan.start_date.strftime('%Y-%m-%d') }} to {{ plan.end_date.strftime('%Y-%m-%d') if plan.end_date else 'TBD' }}</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <div class="card">
+        <h3>📊 Plan Summary</h3>
+        <div class="crop-info">
+            <div class="crop-info-item">
+                <strong>Crop:</strong> {{ plan.crop_name }}
+            </div>
+            <div class="crop-info-item">
+                <strong>Area:</strong> {{ plan.area_hectares }} hectares
+            </div>
+            <div class="crop-info-item">
+                <strong>Budget:</strong> ₹{{ "{:,.0f}".format(plan.budget) }}
+            </div>
+            <div class="crop-info-item">
+                <strong>Soil Quality:</strong> {{ plan.soil_quality }}
+            </div>
+            <div class="crop-info-item">
+                <strong>Water Source:</strong> {{ plan.water_source }}
+            </div>
+            <div class="crop-info-item">
+                <strong>Expected Profit:</strong> ₹{{ "{:,.0f}".format(plan.expected_profit) }}
+            </div>
+            <div class="crop-info-item">
+                <strong>Status:</strong> {{ plan.status }}
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📅 Today's Tasks</h3>
+        {% if todays_tasks %}
+            <ul class="task-list">
+                {% for task in todays_tasks %}
+                    <li class="task-item {% if task.completed %}completed{% endif %}">
+                        <span>{{ task.task_name }} - {{ task.task_description }}</span>
+                        <input type="checkbox" class="task-checkbox" {% if task.completed %}checked{% endif %} onchange="updateTask({{ task.id }})">
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: #7f8c8d;">No tasks for today</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h2>📋 Full Day-by-Day Guide</h2>
+    <ul class="task-list">
+        {% for task in daily_tasks %}
+            <li class="task-item {% if task.completed %}completed{% endif %}">
+                <div>
+                    <strong>{{ task.task_date.strftime('%Y-%m-%d') }}</strong> - {{ task.task_name }}
+                    <div style="font-size: 0.9rem; color: #7f8c8d; margin-top: 0.5rem;">{{ task.task_description }}</div>
+                </div>
+                <input type="checkbox" class="task-checkbox" {% if task.completed %}checked{% endif %} onchange="updateTask({{ task.id }})">
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('selling_guide', plan_id=plan.id) }}" class="btn btn-secondary">View Selling Guide</a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+</div>
+
+<script>
+    function updateTask(taskId) {
+        fetch(`/update-task/${taskId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `completed=${event.target.checked}`
+        });
+    }
+</script>
+{% endblock %}

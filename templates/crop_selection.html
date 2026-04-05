@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Selection - FarmAdvisor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🌱 {{ crop_name }} Crop Plan</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <div>
+            <h3>Crop Details</h3>
+            {% if crop_info %}
+                <div class="crop-info">
+                    <div class="crop-info-item">
+                        <strong>Min Duration:</strong> {{ crop_info.get('growing_season_days_min', 'N/A') }} days
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Max Duration:</strong> {{ crop_info.get('growing_season_days_max', 'N/A') }} days
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Optimal Temp:</strong> {{ crop_info.get('optimal_min_temp', 'N/A') }}-{{ crop_info.get('optimal_max_temp', 'N/A') }}°C
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Rainfall Needed:</strong> {{ crop_info.get('min_rainfall_mm', 'N/A') }} mm
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Suitable Soil:</strong> {{ crop_info.get('soil_types', 'N/A') }}
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Avg Yield:</strong> {{ crop_info.get('avg_yield_tons_per_hectare', 'N/A') }} tons/ha
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <h3>Financial Projection</h3>
+            {% if profit_info %}
+                <div class="crop-info">
+                    <div class="crop-info-item">
+                        <strong>Min Investment:</strong> ₹{{ "{:,.0f}".format(profit_info.get('min_investment_per_hectare', 0)) }}
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Max Investment:</strong> ₹{{ "{:,.0f}".format(profit_info.get('max_investment_per_hectare', 0)) }}
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Min Profit:</strong> ₹{{ "{:,.0f}".format(profit_info.get('min_profit_per_hectare', 0)) }}
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Max Profit:</strong> ₹{{ "{:,.0f}".format(profit_info.get('max_profit_per_hectare', 0)) }}
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Break-even Period:</strong> {{ profit_info.get('break_even_days', 'N/A') }} days
+                    </div>
+                    <div class="crop-info-item">
+                        <strong>Duration Category:</strong> {{ profit_info.get('duration_category', 'N/A') }}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="border-top: 2px solid #ddd; padding-top: 2rem;">
+        <h3>📅 Select Start Date</h3>
+        <p style="color: #7f8c8d; margin-bottom: 1rem;">Choose when you want to start growing this crop. A day-by-day guide will be generated for you.</p>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="start_date">Start Date</label>
+                <input type="date" id="start_date" name="start_date" required min="{{ today }}">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Create Crop Plan</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Set today's date as minimum
+    document.getElementById('start_date').min = new Date().toISOString().split('T')[0];
+</script>
+
+{% endblock %}

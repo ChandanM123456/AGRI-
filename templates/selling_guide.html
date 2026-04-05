@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Selling Guide - FarmAdvisor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🛒 Selling Guide for {{ plan.crop_name }}</h2>
+    <p style="color: #7f8c8d;">Harvest Date: {{ plan.end_date.strftime('%Y-%m-%d') if plan.end_date else 'TBD' }}</p>
+</div>
+
+{% if market_info %}
+<div class="card" style="background: #d5f4e6; border-left: 5px solid #27ae60;">
+    <h3>📈 Current Market Information</h3>
+    <div class="crop-info">
+        <div class="crop-info-item">
+            <strong>Crop:</strong> {{ market_info.crop }}
+        </div>
+        <div class="crop-info-item">
+            <strong>Month:</strong> {{ market_info.month }}
+        </div>
+        <div class="crop-info-item">
+            <strong>Average Price:</strong> ₹{{ "{:,.0f}".format(market_info.avg_price_per_kg) }}/kg
+        </div>
+        <div class="crop-info-item">
+            <strong>Market Demand:</strong> <span style="color: #27ae60; font-weight: bold;">{{ market_info.market_demand }}</span>
+        </div>
+        <div class="crop-info-item">
+            <strong>Waste Percentage:</strong> {{ market_info.waste_percentage }}%
+        </div>
+        <div class="crop-info-item">
+            <strong>Best Region:</strong> {{ market_info.region }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if selling_info %}
+<div class="card">
+    <h3>📦 Selling Guidelines</h3>
+    <div class="crop-info">
+        <div class="crop-info-item">
+            <strong>Market Ready Days:</strong> {{ selling_info.market_ready_days }} days from start
+        </div>
+        <div class="crop-info-item">
+            <strong>Shelf Life:</strong> {{ selling_info.shelf_life_days }} days
+        </div>
+        <div class="crop-info-item">
+            <strong>Best Selling Period:</strong> {{ selling_info.best_selling_period }}
+        </div>
+        <div class="crop-info-item">
+            <strong>High Demand Regions:</strong> {{ selling_info.high_demand_regions }}
+        </div>
+        <div class="crop-info-item">
+            <strong>Min Marketable Weight:</strong> {{ selling_info.min_marketable_weight_kg }} kg
+        </div>
+        <div class="crop-info-item">
+            <strong>Packaging Type:</strong> {{ selling_info.packaging_type }}
+        </div>
+        <div class="crop-info-item">
+            <strong>Transport Type:</strong> {{ selling_info.transport_type }}
+        </div>
+        <div class="crop-info-item">
+            <strong>Waste During Selling:</strong> {{ selling_info.waste_during_selling_percent }}%
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card" style="background: #fdebd0; border-left: 5px solid #f39c12;">
+    <h3>💡 Selling Tips for {{ plan.crop_name }}</h3>
+    <ul style="margin-left: 2rem;">
+        <li>Harvest at optimal ripeness for maximum price</li>
+        <li>Grade the produce properly - better grades fetch higher prices</li>
+        <li>Use appropriate packaging to reduce waste</li>
+        <li>Connect with retailers and traders in high-demand regions</li>
+        <li>Check weather forecasts before transport</li>
+        <li>Monitor market prices before deciding when to sell</li>
+        <li>Avoid selling all produce at once - spread sales to get better prices</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h3>🤝 Retailer Contact Network</h3>
+    <p style="color: #7f8c8d; margin-bottom: 1rem;">Coming soon: Direct connection to retailers and traders in your area</p>
+    <div style="background: #ecf0f1; padding: 1rem; border-radius: 5px;">
+        <p><strong>Feature:</strong> AI-powered market analyzer will identify retailers in high-demand areas and help you connect directly</p>
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('crop_detail', plan_id=plan.id) }}" class="btn btn-primary">Back to Crop Plan</a>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Land Analysis - FarmAdvisor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>📸 Land Analysis & Crop Recommendation</h2>
+    <p style="color: #7f8c8d; margin-bottom: 2rem;">Provide information about your land and we'll recommend the best crops to grow</p>
+
+    <form method="POST" class="d-grid">
+        <div class="form-group">
+            <label for="soil_quality">Soil Quality</label>
+            <select id="soil_quality" name="soil_quality" required>
+                <option value="">Select soil quality...</option>
+                <option value="Poor">Poor (Low fertility)</option>
+                <option value="Average">Average (Moderate fertility)</option>
+                <option value="Good">Good (High fertility)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="water_source">Water Source/Availability</label>
+            <select id="water_source" name="water_source" required>
+                <option value="">Select water availability...</option>
+                <option value="Low">Low (Rainfed/Minimal irrigation)</option>
+                <option value="Medium">Medium (Seasonal water)</option>
+                <option value="High">High (Well/Canal access)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="budget">Budget (₹)</label>
+            <input type="number" id="budget" name="budget" placeholder="Enter your budget in rupees" required min="5000">
+        </div>
+
+        <div class="form-group">
+            <label for="area">Land Area (Hectares)</label>
+            <input type="number" id="area" name="area" placeholder="Enter land area in hectares" required step="0.1" min="0.1">
+        </div>
+
+        <div class="form-group">
+            <label for="location">Location/Region</label>
+            <input type="text" id="location" name="location" placeholder="Your location or region" value="{{ current_user.location or '' }}">
+        </div>
+
+        <button type="submit" class="btn btn-primary">🔍 Analyze & Get Recommendations</button>
+    </form>
+</div>
+
+<div class="card" style="background: #d5f4e6; border-left: 5px solid #27ae60;">
+    <h3>💡 Tips for Better Recommendations:</h3>
+    <ul style="margin-left: 2rem;">
+        <li>Know your soil type: Loamy, Red, Clay, Sandy, or Alluvial</li>
+        <li>Check water availability: Well, Canal, Rainfall, or Reservoir</li>
+        <li>Higher budget allows more crop options</li>
+        <li>Larger area can support high-yield crops</li>
+        <li>Location affects climate suitability and market demand</li>
+    </ul>
+</div>
+{% endblock %}

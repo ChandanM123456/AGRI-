@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Recommendations - FarmAdvisor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>✅ Top 3 Recommended Crops for Your Land</h2>
+    <p style="color: #7f8c8d; margin-bottom: 2rem;">Based on your land analysis, here are the best crops to grow</p>
+
+    <div class="d-grid">
+        {% for crop in crops %}
+        <div class="crop-card">
+            <h3>{{ loop.index }}. {{ crop.crop }}</h3>
+            <div class="crop-info">
+                <div class="crop-info-item">
+                    <strong>Match Score:</strong> {{ crop.score }}/100
+                </div>
+                <div class="crop-info-item">
+                    <strong>Duration:</strong> {{ crop.duration_min }}-{{ crop.duration_max }} days
+                </div>
+                <div class="crop-info-item">
+                    <strong>Expected Profit:</strong> ₹{{ "{:,.0f}".format(crop.expected_profit) }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>Water Requirement:</strong> {{ crop.water_need }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>Investment:</strong> ₹{{ "{:,.0f}".format(crop.investment) }}
+                </div>
+                <div class="crop-info-item">
+                    <strong>Category:</strong> 
+                    {% if crop.duration_min < 100 %}
+                        Short-term
+                    {% elif crop.duration_min < 180 %}
+                        Medium-term
+                    {% else %}
+                        Long-term
+                    {% endif %}
+                </div>
+            </div>
+            <div style="margin-top: 1rem;">
+                <a href="{{ url_for('crop_selection', crop_name=crop.crop) }}" class="btn btn-primary btn-block">Select This Crop</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card" style="background: #d6eaf8; border-left: 5px solid #3498db;">
+    <h3>📌 About These Recommendations:</h3>
+    <ul style="margin-left: 2rem;">
+        <li><strong>Match Score:</strong> Higher score means better suitability for your conditions</li>
+        <li><strong>Duration:</strong> Time from planting to harvest</li>
+        <li><strong>Expected Profit:</strong> Potential profit per hectare (based on market rates)</li>
+        <li><strong>Water Requirement:</strong> Based on annual rainfall and irrigation needs</li>
+        <li><strong>Investment:</strong> Estimated cost for seeds, fertilizer, and labor</li>
+    </ul>
+</div>
+{% endblock %}
