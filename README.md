@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Farmer Advisory System - Complete Real-World Application
 
 ## Project Structure
