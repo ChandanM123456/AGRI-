@@ -490,6 +490,9 @@ def load_user_data(user_id):
             st.session_state.schedule = schedule
             st.session_state.tasks_completed = {item["date"]: item["completed"] for item in schedule}
 
+if "language" not in st.session_state:
+    st.session_state.language = "en"
+
 if "page" not in st.session_state:
     st.session_state.page = "auth_home"
     st.session_state.token = None
@@ -604,6 +607,280 @@ def authenticate_user(username, password):
         return False, None, None
     except Exception as e:
         return False, None, None
+
+def get_shopping_requirements(crop_name, area_hectares):
+    """Get crop-specific shopping requirements with real-world pricing"""
+    requirements = {
+        "tomato": {
+            "seeds": {"name": "Tomato Seeds (Hybrid)", "quantity": f"{int(area_hectares * 500)}g", "price": int(area_hectares * 1500), "unit": "packs"},
+            "fertilizer": {"name": "NPK Fertilizer (19-19-19)", "quantity": f"{int(area_hectares * 50)}kg", "price": int(area_hectares * 3000), "unit": "bags"},
+            "organic": {"name": "Organic Compost", "quantity": f"{int(area_hectares * 1000)}kg", "price": int(area_hectares * 2000), "unit": "tons"},
+            "pesticide": {"name": "Organic Pesticide", "quantity": f"{int(area_hectares * 2)}L", "price": int(area_hectares * 800), "unit": "bottles"},
+            "tools": {"name": "Farm Tools & Equipment", "quantity": "1 set", "price": 2500, "unit": "set"},
+            "irrigation": {"name": "Drip Irrigation Parts", "quantity": f"{int(area_hectares * 100)}m", "price": int(area_hectares * 1500), "unit": "meters"}
+        },
+        "maize": {
+            "seeds": {"name": "Maize Seeds (Hybrid)", "quantity": f"{int(area_hectares * 25)}kg", "price": int(area_hectares * 2000), "unit": "bags"},
+            "fertilizer": {"name": "Urea Fertilizer", "quantity": f"{int(area_hectares * 80)}kg", "price": int(area_hectares * 2500), "unit": "bags"},
+            "organic": {"name": "Farm Yard Manure", "quantity": f"{int(area_hectares * 2000)}kg", "price": int(area_hectares * 1500), "unit": "tons"},
+            "pesticide": {"name": "Herbicide", "quantity": f"{int(area_hectares * 3)}L", "price": int(area_hectares * 1200), "unit": "bottles"},
+            "tools": {"name": "Maize Farming Tools", "quantity": "1 set", "price": 3000, "unit": "set"},
+            "irrigation": {"name": "Sprinkler System", "quantity": f"{int(area_hectares * 50)}m", "price": int(area_hectares * 2000), "unit": "meters"}
+        },
+        "ragi": {
+            "seeds": {"name": "Finger Millet Seeds", "quantity": f"{int(area_hectares * 15)}kg", "price": int(area_hectares * 1200), "unit": "bags"},
+            "fertilizer": {"name": "Organic Fertilizer", "quantity": f"{int(area_hectares * 30)}kg", "price": int(area_hectares * 1500), "unit": "bags"},
+            "organic": {"name": "Vermicompost", "quantity": f"{int(area_hectares * 800)}kg", "price": int(area_hectares * 1200), "unit": "tons"},
+            "pesticide": {"name": "Bio-pesticide", "quantity": f"{int(area_hectares * 1.5)}L", "price": int(area_hectares * 600), "unit": "bottles"},
+            "tools": {"name": "Traditional Farm Tools", "quantity": "1 set", "price": 2000, "unit": "set"}
+        },
+        "paddy": {
+            "seeds": {"name": "Paddy Seeds (Improved)", "quantity": f"{int(area_hectares * 40)}kg", "price": int(area_hectares * 1800), "unit": "bags"},
+            "fertilizer": {"name": "Complex Fertilizer", "quantity": f"{int(area_hectares * 60)}kg", "price": int(area_hectares * 2800), "unit": "bags"},
+            "organic": {"name": "Bio-fertilizer", "quantity": f"{int(area_hectares * 500)}kg", "price": int(area_hectares * 1800), "unit": "tons"},
+            "pesticide": {"name": "Insecticide", "quantity": f"{int(area_hectares * 2.5)}L", "price": int(area_hectares * 1000), "unit": "bottles"},
+            "tools": {"name": "Paddy Farming Equipment", "quantity": "1 set", "price": 3500, "unit": "set"},
+            "irrigation": {"name": "Water Pump & Pipes", "quantity": "1 set", "price": int(area_hectares * 2500), "unit": "set"}
+        },
+        "cotton": {
+            "seeds": {"name": "Bt Cotton Seeds", "quantity": f"{int(area_hectares * 5)}kg", "price": int(area_hectares * 3000), "unit": "packs"},
+            "fertilizer": {"name": "DAP Fertilizer", "quantity": f"{int(area_hectares * 70)}kg", "price": int(area_hectares * 3500), "unit": "bags"},
+            "organic": {"name": "Organic Manure", "quantity": f"{int(area_hectares * 1200)}kg", "price": int(area_hectares * 2200), "unit": "tons"},
+            "pesticide": {"name": "Cotton Specific Pesticide", "quantity": f"{int(area_hectares * 4)}L", "price": int(area_hectares * 2000), "unit": "bottles"},
+            "tools": {"name": "Cotton Picking Tools", "quantity": "1 set", "price": 4000, "unit": "set"}
+        }
+    }
+    
+    # Default for other crops
+    default_requirements = {
+        "seeds": {"name": f"{crop_name.title()} Seeds", "quantity": f"{int(area_hectares * 20)}kg", "price": int(area_hectares * 1500), "unit": "bags"},
+        "fertilizer": {"name": "General Purpose Fertilizer", "quantity": f"{int(area_hectares * 50)}kg", "price": int(area_hectares * 2500), "unit": "bags"},
+        "organic": {"name": "Organic Compost", "quantity": f"{int(area_hectares * 1000)}kg", "price": int(area_hectares * 1800), "unit": "tons"},
+        "pesticide": {"name": "General Pesticide", "quantity": f"{int(area_hectares * 2)}L", "price": int(area_hectares * 800), "unit": "bottles"},
+        "tools": {"name": "Basic Farm Tools", "quantity": "1 set", "price": 2500, "unit": "set"}
+    }
+    
+    return requirements.get(crop_name.lower(), default_requirements)
+
+def get_nearest_markets(location):
+    """Get nearest agricultural markets with real market names"""
+    markets = {
+        "bangalore": [
+            {"name": "KR Market", "distance": "2 km", "address": "Krishna Rajendra Market, Bangalore"},
+            {"name": "Yelahanka Market", "distance": "15 km", "address": "Yelahanka Agricultural Market, Bangalore"},
+            {"name": "Hoskote Market", "distance": "25 km", "address": "Hoskote Agricultural Yard, Bangalore Rural"}
+        ],
+        "mysore": [
+            {"name": "Mysore APMC Market", "distance": "3 km", "address": "APMC Market, Mysore"},
+            {"name": "Nazarbad Market", "distance": "5 km", "address": "Nazarbad Agricultural Market, Mysore"},
+            {"name": "Hootagalli Market", "distance": "8 km", "address": "Hootagalli Market Yard, Mysore"}
+        ],
+        "tumkur": [
+            {"name": "Tumkur APMC", "distance": "2 km", "address": "APMC Market, Tumkur"},
+            {"name": "Kunigal Market", "distance": "20 km", "address": "Kunigal Agricultural Market"},
+            {"name": "Gubbi Market", "distance": "25 km", "address": "Gubbi Market Yard"}
+        ],
+        "mandya": [
+            {"name": "Mandya Sugar Market", "distance": "2 km", "address": "Mandya Agricultural Market"},
+            {"name": "Maddur Market", "distance": "15 km", "address": "Maddur APMC Market"},
+            {"name": "Srirangapatna Market", "distance": "18 km", "address": "Srirangapatna Agricultural Market"}
+        ]
+    }
+    
+    # Default markets for other locations
+    default_markets = [
+        {"name": "Local APMC Market", "distance": "5 km", "address": "Nearest Agricultural Market"},
+        {"name": "District Market Yard", "distance": "10 km", "address": "District Agricultural Market"},
+        {"name": "Regional Market", "distance": "20 km", "address": "Regional Agricultural Market"}
+    ]
+    
+    location_key = location.lower().split()[0] if location else "default"
+    return markets.get(location_key, default_markets)
+
+def get_translated_text(text, lang_code):
+    translations = {
+        "en": {
+            "dashboard": "Dashboard",
+            "profile_settings": "Profile Settings",
+            "news": "News",
+            "selling_strategy": "Selling Strategy",
+            "government_subsidies": "Government Subsidies",
+            "logout": "Logout",
+            "start_farming": "Start Farming",
+            "view_schedule": "View Schedule",
+            "market_insights": "Market Insights",
+            "language": "Language",
+            "weather": "Weather",
+            "temperature": "Temperature",
+            "humidity": "Humidity",
+            "location": "Location",
+            "shopping_requirements": "Pre-Farming Shopping Requirements",
+            "seeds": "Seeds",
+            "fertilizer": "Fertilizer",
+            "organic": "Organic Manure",
+            "pesticide": "Pesticide",
+            "tools": "Tools & Equipment",
+            "irrigation": "Irrigation",
+            "quantity": "Quantity",
+            "price": "Price",
+            "nearest_markets": "Nearest Agricultural Markets",
+            "purchase_checklist": "Purchase Checklist",
+            "mark_as_purchased": "Mark as Purchased",
+            "total_cost": "Total Estimated Cost",
+            "proceed_to_calendar": "Proceed to Farming Calendar",
+            "back_to_results": "Back to Results",
+            "profile": "Profile",
+            "personal_details": "Personal Details",
+            "account_status": "Account Status",
+            "name": "Name",
+            "email": "Email",
+            "designation": "Designation",
+            "role": "Role",
+            "member_since": "Member Since",
+            "status": "Status",
+            "verified": "Verified",
+            "farming_activity": "Farming Activity",
+            "current_crop": "Current Crop",
+            "land_area": "Land Area",
+            "start_date": "Start Date",
+            "agriculture_news": "Agriculture News",
+            "todays_headlines": "Today's Top Agriculture Headlines",
+            "source": "Source",
+            "date": "Date",
+            "selling_strategies": "Best Selling Strategies",
+            "price_range": "Price Range",
+            "current_demand": "Current Demand",
+            "best_markets": "Best Markets",
+            "best_time": "Best Time",
+            "selling_strategy": "Selling Strategy",
+            "view_market_rates": "View Market Rates",
+            "congratulations": "Congratulations!",
+            "farming_completed": "All farming days completed. Ready for harvest!",
+            "back_to_dashboard": "Back to Dashboard"
+        },
+        "hi": {
+            "dashboard": "डैशबोर्ड",
+            "profile_settings": "प्रोफाइल सेटिंग्स",
+            "news": "समाचार",
+            "selling_strategy": "बिक्री रणनीति",
+            "government_subsidies": "सरकारी सब्सिडी",
+            "logout": "लॉगआउट",
+            "start_farming": "खेती शुरू करें",
+            "view_schedule": "अनुसूची देखें",
+            "market_insights": "बाजार जानकारी",
+            "language": "भाषा",
+            "weather": "मौसम",
+            "temperature": "तापमान",
+            "humidity": "नमी",
+            "location": "स्थान",
+            "shopping_requirements": "खेती से पहले खरीदारी आवश्यकताएं",
+            "seeds": "बीज",
+            "fertilizer": "उर्वरक",
+            "organic": "जैविक खाद",
+            "pesticide": "कीटनाशक",
+            "tools": "उपकरण और उपकरण",
+            "irrigation": "सिंचाई",
+            "quantity": "मात्रा",
+            "price": "कीमत",
+            "nearest_markets": "निकटतम कृषि बाजार",
+            "purchase_checklist": "खरीद सूची",
+            "mark_as_purchased": "खरीदे गए के रूप में चिह्नित करें",
+            "total_cost": "कुल अनुमानित लागत",
+            "proceed_to_calendar": "खेती कैलेंडर पर जाएं",
+            "back_to_results": "परिणामों पर वापस जाएं",
+            "profile": "प्रोफाइल",
+            "personal_details": "व्यक्तिगत विवरण",
+            "account_status": "खाता स्थिति",
+            "name": "नाम",
+            "email": "ईमेल",
+            "designation": "पद",
+            "role": "भूमिका",
+            "member_since": "सदस्यता दिनांक",
+            "status": "स्थिति",
+            "verified": "सत्यापित",
+            "farming_activity": "खेती गतिविधि",
+            "current_crop": "वर्तमान फसल",
+            "land_area": "भूमि क्षेत्र",
+            "start_date": "प्रारंभ तिथि",
+            "agriculture_news": "कृषि समाचार",
+            "todays_headlines": "आज की प्रमुख कृषि सुर्खियां",
+            "source": "स्रोत",
+            "date": "तिथि",
+            "selling_strategies": "सर्वोत्तम बिक्री रणनीतियां",
+            "price_range": "मूल्य सीमा",
+            "current_demand": "वर्तमान मांग",
+            "best_markets": "सर्वोत्तम बाजार",
+            "best_time": "सर्वोत्तम समय",
+            "selling_strategy": "बिक्री रणनीति",
+            "view_market_rates": "बाजार दरें देखें",
+            "congratulations": "बधाई हो!",
+            "farming_completed": "सभी खेती दिन पूर्ण हुए। फसल काटने के लिए तैयार!",
+            "back_to_dashboard": "डैशबोर्ड पर वापस जाएं"
+        },
+        "te": {
+            "dashboard": "డాష్బోర్డ్",
+            "profile_settings": "ప్రొఫైల్ సెట్టింగ్‌లు",
+            "news": "వార్తలు",
+            "selling_strategy": "అమ్మకాల వ్యూహం",
+            "government_subsidies": "ప్రభుత్వ సబ్సిడీలు",
+            "logout": "లాగ్‌అవుట్",
+            "start_farming": "వ్యవసాయం ప్రారంభించండి",
+            "view_schedule": "షెడ్యూల్ చూడండి",
+            "market_insights": "మార్కెట్ విశ్లేషణలు",
+            "language": "భాష",
+            "weather": "వాతావరణం",
+            "temperature": "ఉష్ణోగ్రత",
+            "humidity": "తేమ",
+            "location": "స్థానం",
+            "shopping_requirements": "వ్యవసాయం ముందు కొనుగోలు అవసరాలు",
+            "seeds": "విత్తనాలు",
+            "fertilizer": "ఎరువులు",
+            "organic": "సేంద్రీయ ఎరువు",
+            "pesticide": "కీటకనాశకాలు",
+            "tools": "పనిముట్లు మరియు పరికరాలు",
+            "irrigation": "నీటిపారుదల",
+            "quantity": "పరిమాణం",
+            "price": "�ర",
+            "nearest_markets": "సమీప వ్యవసాయ మార్కెట్లు",
+            "purchase_checklist": "కొనుగోలు చెక్‌లిస్ట్",
+            "mark_as_purchased": "కొనుగోలు చేసినట్లు గుర్తించండి",
+            "total_cost": "మొత్తం అంచనా ఖర్చు",
+            "proceed_to_calendar": "వ్యవసాయ క్యాలెండర్‌కు వెళ్ళండి",
+            "back_to_results": "ఫలితాలకు తిరిగి వెళ్ళండి"
+        },
+        "kn": {
+            "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+            "profile_settings": "ಪ್ರೊಫೈಲ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+            "news": "ಸುದ್ದಿಗಳು",
+            "selling_strategy": "ಮಾರಾಟ ತಂತ್ರ",
+            "government_subsidies": "ಸರ್ಕಾರಿ ಸಹಾಯಧನ",
+            "logout": "ಲಾಗ್‌ಔಟ್",
+            "start_farming": "ಕೃಷಿ ಪ್ರಾರಂಭಿಸಿ",
+            "view_schedule": "ವೇಳಾಪಟ್ಟಿ ನೋಡಿ",
+            "market_insights": "ಮಾರುಕಟ್ಟೆ ಒಳನೋಟಗಳು",
+            "language": "ಭಾಷೆ",
+            "weather": "ಹವಾಮಾನ",
+            "temperature": "ತಾಪಮಾನ",
+            "humidity": "ಆರ್ದ್ರತೆ",
+            "location": "ಸ್ಥಳ",
+            "shopping_requirements": "ಕೃಷಿಗೆ ಮೊದಲು ಖರೀದಿ ಅಗತ್ಯಗಳು",
+            "seeds": "ಬೀಜಗಳು",
+            "fertilizer": "ರಸಗೊಬ್ಬರ",
+            "organic": "ಜೈವಿಕ ಗೊಬ್ಬರ",
+            "pesticide": "ಕೀಟನಾಶಕಗಳು",
+            "tools": "ಉಪಕರಣಗಳು ಮತ್ತು ಸಲಕರಣೆಗಳು",
+            "irrigation": "ನೀರಾವರಿ",
+            "quantity": "ಪ್ರಮಾಣ",
+            "price": "ಬೆಲೆ",
+            "nearest_markets": "ಹತ್ತಿರದ ಕೃಷಿ ಮಾರುಕಟ್ಟೆಗಳು",
+            "purchase_checklist": "ಖರೀದಿ ಚೆಕ್‌ಲಿಸ್ಟ್",
+            "mark_as_purchased": "ಖರೀದಿಸಿದಂತೆ ಗುರುತಿಸಿ",
+            "total_cost": "ಒಟ್ಟು ಅಂದಾಜು ವೆಚ್ಚ",
+            "proceed_to_calendar": "ಕೃಷಿ ಕ್ಯಾಲೆಂಡರ್‌ಗೆ ಹೋಗಿ",
+            "back_to_results": "ಫಲಿತಾಂಶಗಳಿಗೆ ಹಿಂದಿರುಗಿ"
+        }
+    }
+    return translations.get(lang_code, {}).get(text, text)
 
 @st.cache_data
 def load_data():
@@ -975,30 +1252,107 @@ elif st.session_state.page == "auth_register":
 # ==================== PAGE: DASHBOARD ====================
 elif st.session_state.page == "dashboard":
     
+    # Enhanced Sidebar with Better Design
     with st.sidebar:
-        st.markdown("### 👨‍🌾 Farmer Portal")
-        st.markdown("Explore your profile, news, selling strategy, and subsidy support")
+        # Custom styled header
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        ">
+            <h2 style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600;">
+                👨‍🌾 Farmer Portal
+            </h2>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
+                Your Complete Farming Companion
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Language Selector with Enhanced Styling
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        ">
+            <h4 style="margin: 0 0 10px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                🌐 Language / भाषा / భాష / ಭಾಷೆ
+            </h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        language_options = {
+            'en': '🇺🇸 English',
+            'hi': '🇮🇳 हिंदी',
+            'te': '🇮🇳 తెలుగు',
+            'kn': '🇮🇳 ಕನ್ನಡ'
+        }
+        
+        selected_lang = st.selectbox(
+            "",
+            options=list(language_options.keys()),
+            format_func=lambda x: language_options[x],
+            index=list(language_options.keys()).index(st.session_state.language),
+            key="language_selector"
+        )
+        
+        if selected_lang != st.session_state.language:
+            st.session_state.language = selected_lang
+            st.rerun()
+        
+        # Navigation Menu with Enhanced Styling
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        ">
+            <h4 style="margin: 0 0 15px 0; color: #333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                📱 Quick Navigation
+            </h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Enhanced Navigation Buttons
+        nav_buttons = [
+            ("👤", get_translated_text("profile_settings", st.session_state.language), "profile"),
+            ("📰", get_translated_text("news", st.session_state.language), "news"),
+            ("💼", get_translated_text("selling_strategy", st.session_state.language), "selling_strategy"),
+            ("🏛️", get_translated_text("government_subsidies", st.session_state.language), "government_subsidy"),
+        ]
+        
+        for icon, text, page in nav_buttons:
+            if st.button(f"{icon} {text}", use_container_width=True, key=f"nav_{page}"):
+                st.session_state.page = page
+                st.rerun()
+        
         st.markdown("---")
-        st.markdown("### 📱 More Options")
         
-        if st.button("👤 Profile Settings", use_container_width=True):
-            st.session_state.page = "profile"
-            st.rerun()
+        # Logout Button with Special Styling
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        ">
+        """, unsafe_allow_html=True)
         
-        if st.button("📰 News", use_container_width=True):
-            st.session_state.page = "news"
-            st.rerun()
-        
-        if st.button("💼 Selling Strategy", use_container_width=True):
-            st.session_state.page = "selling_strategy"
-            st.rerun()
-        
-        if st.button("🏛️ Government Subsidies", use_container_width=True):
-            st.session_state.page = "government_subsidy"
-            st.rerun()
-        
-        st.markdown("---")
-        if st.button("🚪 Logout", use_container_width=True):
+        if st.button("🚪 " + get_translated_text("logout", st.session_state.language), 
+                     use_container_width=True, key="logout_btn"):
             clear_remembered_user()
             st.session_state.page = "auth_home"
             st.session_state.token = None
@@ -1009,6 +1363,8 @@ elif st.session_state.page == "dashboard":
             st.session_state.farming_plan = None
             st.session_state.plan_id = None
             st.rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     
     st.title("🌾 Agri AI Pro Dashboard")
     
@@ -1018,22 +1374,22 @@ elif st.session_state.page == "dashboard":
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown(f"""<div class="metric-card">
-            <h3>🌡️ Temperature</h3>
+            <h3>🌡️ {get_translated_text("temperature", st.session_state.language)}</h3>
             <h2>{temp}°C</h2>
         </div>""", unsafe_allow_html=True)
     with col2:
         st.markdown(f"""<div class="metric-card">
-            <h3>💧 Humidity</h3>
+            <h3>💧 {get_translated_text("humidity", st.session_state.language)}</h3>
             <h2>{humidity}%</h2>
         </div>""", unsafe_allow_html=True)
     with col3:
         st.markdown(f"""<div class="metric-card">
-            <h3>🌤️ Weather</h3>
+            <h3>🌤️ {get_translated_text("weather", st.session_state.language)}</h3>
             <h2>{weather_condition}</h2>
         </div>""", unsafe_allow_html=True)
     with col4:
         st.markdown(f"""<div class="metric-card">
-            <h3>📍 Location</h3>
+            <h3>📍 {get_translated_text("location", st.session_state.language)}</h3>
             <h2>{location}</h2>
         </div>""", unsafe_allow_html=True)
     
@@ -1043,12 +1399,12 @@ elif st.session_state.page == "dashboard":
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🚜 Start Farming", use_container_width=True):
+        if st.button("🚜 " + get_translated_text("start_farming", st.session_state.language), use_container_width=True):
             st.session_state.page = "upload"
             st.rerun()
     
     with col2:
-        if st.button("📅 View Schedule", use_container_width=True):
+        if st.button("📅 " + get_translated_text("view_schedule", st.session_state.language), use_container_width=True):
             if st.session_state.farming_plan:
                 st.session_state.page = "schedule"
                 st.rerun()
@@ -1056,7 +1412,7 @@ elif st.session_state.page == "dashboard":
                 st.warning("⚠️ Please start farming first")
     
     with col3:
-        if st.button("📈 Market Insights", use_container_width=True):
+        if st.button("📈 " + get_translated_text("market_insights", st.session_state.language), use_container_width=True):
             if st.session_state.crop:
                 st.session_state.page = "market"
                 st.rerun()
@@ -1324,10 +1680,13 @@ elif st.session_state.page == "results":
         st.session_state.farming_plan['crop'] = selected_crop
         
         st.markdown("---")
-        
         col1, col2 = st.columns(2)
         
         with col1:
+            if st.button("🛒 " + get_translated_text("shopping_requirements", st.session_state.language), use_container_width=True):
+                st.session_state.page = "shopping"
+                st.rerun()
+            
             if st.button("📅 Create Farming Schedule", use_container_width=True):
                 duration = CROP_DURATION.get(selected_crop.lower(), 120)
                 schedule = generate_farming_schedule(
@@ -1343,9 +1702,142 @@ elif st.session_state.page == "results":
                 st.rerun()
         
         with col2:
-            if st.button("⬅️ Back to Upload", use_container_width=True):
+            if st.button("⬅️ " + get_translated_text("back_to_results", st.session_state.language), use_container_width=True):
                 st.session_state.page = "upload"
                 st.rerun()
+
+# ==================== PAGE: SHOPPING REQUIREMENTS ====================
+elif st.session_state.page == "shopping":
+    
+    if st.button("⬅️ " + get_translated_text("back_to_results", st.session_state.language)):
+        st.session_state.page = "results"
+        st.rerun()
+    
+    st.title("🛒 " + get_translated_text("shopping_requirements", st.session_state.language))
+    
+    if st.session_state.farming_plan:
+        plan = st.session_state.farming_plan
+        crop = st.session_state.crop
+        area = plan.get('area', 1.0)
+        location = plan.get('city', 'Unknown')
+        
+        # Initialize shopping checklist in session state
+        if 'shopping_checklist' not in st.session_state:
+            st.session_state.shopping_checklist = {}
+        
+        st.markdown(f"### 🌾 Shopping Requirements for {crop.upper()} - {area} acres")
+        st.markdown(f"**📍 Location:** {location}")
+        
+        # Get shopping requirements
+        requirements = get_shopping_requirements(crop, area)
+        
+        # Shopping Checklist Card
+        st.markdown("---")
+        st.markdown("### ✅ " + get_translated_text("purchase_checklist", st.session_state.language))
+        
+        total_cost = 0
+        all_purchased = True
+        
+        # Create a beautiful card layout for shopping items
+        for category, item in requirements.items():
+            category_translated = get_translated_text(category, st.session_state.language)
+            
+            with st.container():
+                st.markdown(f"""
+                <div style="border: 2px solid #4CAF50; border-radius: 15px; padding: 20px; margin: 10px 0; background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);">
+                    <h4 style="color: #2e7d32; margin-bottom: 15px;">🛍️ {category_translated}</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <p style="font-weight: bold; color: #1b5e20; font-size: 16px;">{item['name']}</p>
+                            <p style="color: #388e3c;">📏 {get_translated_text('quantity', st.session_state.language)}: {item['quantity']} ({item['unit']})</p>
+                            <p style="color: #388e3c;">💰 {get_translated_text('price', st.session_state.language)}: ₹{item['price']:,.0f}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="font-size: 18px; font-weight: bold; color: #2e7d32;">₹{item['price']:,.0f}</p>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Checkbox for marking as purchased
+                purchased = st.checkbox(
+                    get_translated_text("mark_as_purchased", st.session_state.language) + f" - {item['name']}",
+                    key=f"purchase_{category}",
+                    value=st.session_state.shopping_checklist.get(category, False)
+                )
+                
+                st.session_state.shopping_checklist[category] = purchased
+                
+                if purchased:
+                    total_cost += item['price']
+                else:
+                    all_purchased = False
+                
+                st.markdown("---")
+        
+        # Total Cost Section
+        st.markdown(f"""
+        <div style="border: 3px solid #FF9800; border-radius: 15px; padding: 25px; margin: 20px 0; background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%); text-align: center;">
+            <h3 style="color: #e65100; margin-bottom: 10px;">💵 {get_translated_text('total_cost', st.session_state.language)}</h3>
+            <p style="font-size: 28px; font-weight: bold; color: #ff6f00;">₹{total_cost:,.0f}</p>
+            <p style="color: #f57c00; font-size: 14px;">Estimated cost for all marked items</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Nearest Markets Section
+        st.markdown("---")
+        st.markdown("### 🏪 " + get_translated_text("nearest_markets", st.session_state.language))
+        
+        markets = get_nearest_markets(location)
+        
+        for i, market in enumerate(markets, 1):
+            st.markdown(f"""
+            <div style="border: 1px solid #2196F3; border-radius: 10px; padding: 15px; margin: 10px 0; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                <h4 style="color: #1565c0; margin-bottom: 10px;">📍 {market['name']}</h4>
+                <p style="color: #1976d2;">📏 Distance: {market['distance']}</p>
+                <p style="color: #1976d2;">🏠 Address: {market['address']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Action Buttons
+        st.markdown("---")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📅 " + get_translated_text("proceed_to_calendar", st.session_state.language), 
+                        use_container_width=True, 
+                        disabled=not all_purchased,
+                        help="Please mark all items as purchased before proceeding"):
+                # Add shopping requirements to the first day of schedule
+                if st.session_state.plan_id:
+                    shopping_task = {
+                        'date': datetime.date.today().strftime('%Y-%m-%d'),
+                        'task': f'🛒 Completed shopping for {crop}: Seeds, Fertilizer, Tools & Equipment',
+                        'type': 'shopping',
+                        'completed': True
+                    }
+                    save_daily_tasks_to_db(st.session_state.plan_id, [shopping_task])
+                
+                st.session_state.page = "schedule"
+                st.rerun()
+        
+        with col2:
+            if st.button("⬅️ " + get_translated_text("back_to_results", st.session_state.language), 
+                        use_container_width=True):
+                st.session_state.page = "results"
+                st.rerun()
+        
+        if not all_purchased:
+            st.warning("⚠️ Please mark all items as purchased before proceeding to the farming calendar.")
+        
+        # Progress indicator
+        purchased_count = sum(1 for v in st.session_state.shopping_checklist.values() if v)
+        total_items = len(requirements)
+        progress = purchased_count / total_items if total_items > 0 else 0
+        
+        st.markdown("---")
+        st.markdown(f"### 📊 Shopping Progress: {purchased_count}/{total_items} items purchased")
+        st.progress(progress)
 
 # ==================== PAGE: DAILY SCHEDULE ====================
 elif st.session_state.page == "schedule":
@@ -1442,115 +1934,319 @@ elif st.session_state.page == "schedule":
         st.markdown(f"### 📊 Progress: {completed_count}/{total_count} days completed")
         st.progress(progress)
         
-        # Selling Information Section
-        st.markdown("---")
-        st.markdown("### 🏪 Best Selling Strategies")
-        
+        if progress == 1.0:
+            st.success(f"🎉 {get_translated_text('congratulations', st.session_state.language)}! {get_translated_text('farming_completed', st.session_state.language)}")
+            if st.button("🏪 View Marketing & Selling Options", use_container_width=True):
+                st.session_state.page = "marketing"
+                st.rerun()
+        else:
+            st.info("📝 Complete all daily farming tasks to unlock marketing and selling options")
+
+# ==================== PAGE: MARKETING & SELLING ====================
+elif st.session_state.page == "marketing":
+    
+    if st.button("⬅️ Back to Calendar"):
+        st.session_state.page = "schedule"
+        st.rerun()
+    
+    st.title("🏪 Marketing & Selling Options")
+    st.markdown("### 🌾 Sell Your Harvest for Maximum Profit!")
+    
+    if st.session_state.farming_plan:
         crop = st.session_state.crop.lower()
+        location = st.session_state.farming_plan.get('city', 'Unknown')
+        area = st.session_state.farming_plan.get('area', 1.0)
+        
+        # Enhanced market data with comprehensive information
         market_prices = {
-            'rice': {'min': 20, 'max': 35, 'avg': 27, 'demand': 'High', 'markets': ['Bangalore', 'Mysore'], 'strategy': 'Sell immediately after harvest to avoid storage losses. Target wholesale markets for bulk sales.'},
-            'maize': {'min': 18, 'max': 28, 'avg': 23, 'demand': 'Medium', 'markets': ['Pune', 'Nashik'], 'strategy': 'Store in cool, dry place. Sell during high demand seasons. Consider processing into corn flour for better prices.'},
-            'wheat': {'min': 25, 'max': 40, 'avg': 32, 'demand': 'High', 'markets': ['Delhi', 'Haryana'], 'strategy': 'Government procurement centers offer guaranteed prices. Sell in lots to avoid price fluctuations.'},
-            'cotton': {'min': 50, 'max': 80, 'avg': 65, 'demand': 'High', 'markets': ['Gujarat', 'Maharashtra'], 'strategy': 'Ginning and pressing before sale increases value. Sell to textile mills directly for premium prices.'},
-            'sugarcane': {'min': 3, 'max': 6, 'avg': 4.5, 'demand': 'Medium', 'markets': ['Maharashtra', 'Haryana'], 'strategy': 'Sell to sugar mills immediately after harvest. Consider cooperative societies for better rates.'},
-            'tomato': {'min': 10, 'max': 25, 'avg': 17, 'demand': 'High', 'markets': ['Bangalore', 'Chennai'], 'strategy': 'Harvest at right ripeness. Sell fresh to local markets. Consider value addition like ketchup for higher returns.'},
-            'potato': {'min': 8, 'max': 18, 'avg': 13, 'demand': 'High', 'markets': ['Punjab', 'Himachal Pradesh'], 'strategy': 'Store in cold storage for year-round sales. Sell during off-season for premium prices.'},
-            'cabbage': {'min': 8, 'max': 15, 'avg': 11, 'demand': 'Medium', 'markets': ['Bangalore', 'Mysore'], 'strategy': 'Harvest fresh. Sell to wholesale markets. Consider organic certification for higher prices.'},
-            'onion': {'min': 8, 'max': 20, 'avg': 14, 'demand': 'High', 'markets': ['Maharashtra', 'Karnataka'], 'strategy': 'Proper curing before storage. Sell during high demand periods. Export potential available.'},
+            'tomato': {
+                'min': 10, 'max': 25, 'avg': 17, 'demand': 'High', 
+                'markets': ['Bangalore', 'Chennai', 'Hyderabad'],
+                'strategy': 'Harvest at right ripeness. Sell fresh to local markets. Consider value addition like ketchup for higher returns.',
+                'storage': 'Can be stored for 5-7 days at room temperature',
+                'transport': 'Requires careful handling, use crates',
+                'best_season': 'October - March',
+                'price_factors': 'Quality, size, color, and freshness',
+                'estimated_yield': f"{area * 25:.0f} - {area * 35:.0f} quintals",
+                'estimated_revenue': f"₹{area * 25000:.0f} - ₹{area * 87500:.0f}"
+            },
+            'maize': {
+                'min': 18, 'max': 28, 'avg': 23, 'demand': 'Medium', 
+                'markets': ['Pune', 'Nashik', 'Bangalore'],
+                'strategy': 'Store in cool, dry place. Sell during high demand seasons. Consider processing into corn flour for better prices.',
+                'storage': 'Can be stored for 6-12 months when dried properly',
+                'transport': 'Easy to transport, requires dry conditions',
+                'best_season': 'Year-round demand, peak in winter',
+                'price_factors': 'Moisture content, grain quality, variety',
+                'estimated_yield': f"{area * 20:.0f} - {area * 30:.0f} quintals",
+                'estimated_revenue': f"₹{area * 36000:.0f} - ₹{area * 84000:.0f}"
+            },
+            'rice': {
+                'min': 20, 'max': 35, 'avg': 27, 'demand': 'High', 
+                'markets': ['Bangalore', 'Mysore', 'Delhi'],
+                'strategy': 'Sell immediately after harvest to avoid storage losses. Target wholesale markets for bulk sales.',
+                'storage': 'Can be stored for 12-18 months with proper conditions',
+                'transport': 'Requires dry storage and moisture control',
+                'best_season': 'Kharif: Oct-Dec, Rabi: Apr-Jun',
+                'price_factors': 'Grain quality, variety, milling recovery',
+                'estimated_yield': f"{area * 30:.0f} - {area * 40:.0f} quintals",
+                'estimated_revenue': f"₹{area * 60000:.0f} - ₹{area * 140000:.0f}"
+            },
+            'cotton': {
+                'min': 50, 'max': 80, 'avg': 65, 'demand': 'High', 
+                'markets': ['Gujarat', 'Maharashtra', 'Telangana'],
+                'strategy': 'Ginning and pressing before sale increases value. Sell to textile mills directly for premium prices.',
+                'storage': 'Requires controlled humidity, can store 6-12 months',
+                'transport': 'Requires covered transport to prevent moisture',
+                'best_season': 'October - February',
+                'price_factors': 'Staple length, cleanliness, moisture content',
+                'estimated_yield': f"{area * 15:.0f} - {area * 25:.0f} quintals",
+                'estimated_revenue': f"₹{area * 75000:.0f} - ₹{area * 200000:.0f}"
+            },
+            'ragi': {
+                'min': 15, 'max': 25, 'avg': 20, 'demand': 'Medium', 
+                'markets': ['Bangalore', 'Mysore', 'Hubli'],
+                'strategy': 'Sell to health food stores and organic markets. Consider value addition through flour processing.',
+                'storage': 'Excellent storage capacity, 12-24 months',
+                'transport': 'Easy to transport and store',
+                'best_season': 'Year-round, higher demand in festivals',
+                'price_factors': 'Grain quality, processing method, organic certification',
+                'estimated_yield': f"{area * 8:.0f} - {area * 12:.0f} quintals",
+                'estimated_revenue': f"₹{area * 12000:.0f} - ₹{area * 30000:.0f}"
+            },
+            'cabbage': {
+                'min': 8, 'max': 15, 'avg': 11, 'demand': 'Medium', 
+                'markets': ['Bangalore', 'Mysore', 'Chennai'],
+                'strategy': 'Harvest fresh. Sell to wholesale markets. Consider organic certification for higher prices.',
+                'storage': 'Cold storage extends life to 2-3 months',
+                'transport': 'Requires refrigerated transport for long distances',
+                'best_season': 'October - March',
+                'price_factors': 'Head size, freshness, color, weight',
+                'estimated_yield': f"{area * 40:.0f} - {area * 60:.0f} quintals",
+                'estimated_revenue': f"₹{area * 32000:.0f} - ₹{area * 90000:.0f}"
+            }
         }
         
         if crop in market_prices:
             prices = market_prices[crop]
-            current_month = datetime.datetime.now().strftime('%B')
             
+            # Harvest Summary Card
+            st.markdown("---")
+            st.markdown("### 📊 Harvest Summary")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.markdown(f"**💰 Price Range:** ₹{prices['min']}-{prices['max']}/kg")
+                st.markdown(f"""<div class="metric-card">
+                    <h3>🌾 Crop</h3>
+                    <h2>{crop.upper()}</h2>
+                </div>""", unsafe_allow_html=True)
             with col2:
-                st.markdown(f"**📊 Current Demand:** {prices['demand']}")
+                st.markdown(f"""<div class="metric-card">
+                    <h3>📏 Area</h3>
+                    <h2>{area} acres</h2>
+                </div>""", unsafe_allow_html=True)
             with col3:
-                st.markdown(f"**🏪 Best Markets:** {', '.join(prices['markets'])}")
+                st.markdown(f"""<div class="metric-card">
+                    <h3>⚖️ Est. Yield</h3>
+                    <h2>{prices['estimated_yield']}</h2>
+                </div>""", unsafe_allow_html=True)
             with col4:
-                st.markdown(f"**📅 Best Time:** {current_month}")
+                st.markdown(f"""<div class="metric-card">
+                    <h3>💰 Est. Revenue</h3>
+                    <h2>{prices['estimated_revenue']}</h2>
+                </div>""", unsafe_allow_html=True)
             
-            st.markdown(f"**🎯 Selling Strategy:** {prices['strategy']}")
-            
+            # Market Overview Cards
             st.markdown("---")
-            st.markdown("### 🌾 Farmers are the Backbone of Our Nation!")
-            st.markdown("**💪 Dear Farmer, your hard work feeds millions and builds our country's future. May your harvest bring prosperity and joy! Good luck with your sales! 🚜✨**")
+            st.markdown("### 🏪 Market Overview")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.markdown(f"""<div class="metric-card">
+                    <h3>💰 Price Range</h3>
+                    <h2>₹{prices['min']}-{prices['max']}/kg</h2>
+                </div>""", unsafe_allow_html=True)
+            with col2:
+                st.markdown(f"""<div class="metric-card">
+                    <h3>📊 Demand</h3>
+                    <h2>{prices['demand']}</h2>
+                </div>""", unsafe_allow_html=True)
+            with col3:
+                st.markdown(f"""<div class="metric-card">
+                    <h3>🏪 Best Markets</h3>
+                    <h2>{len(prices['markets'])} Cities</h2>
+                </div>""", unsafe_allow_html=True)
+            with col4:
+                st.markdown(f"""<div class="metric-card">
+                    <h3>📅 Best Season</h3>
+                    <h2>{prices['best_season']}</h2>
+                </div>""", unsafe_allow_html=True)
+            
+            # Comprehensive Selling Strategy
+            st.markdown("---")
+            st.markdown("### 🎯 Selling Strategy")
+            st.markdown(f"**{prices['strategy']}**")
+            
+            # Nearest Markets Section
+            st.markdown("---")
+            st.markdown("### 📍 Nearest Agricultural Markets")
+            
+            nearest_markets = get_nearest_markets(location)
+            
+            for i, market in enumerate(nearest_markets, 1):
+                # Check if this market is in the recommended markets list
+                is_recommended = market['name'] in prices['markets']
+                badge = "⭐ RECOMMENDED" if is_recommended else "📍 Available"
+                
+                st.markdown(f"""
+                <div style="border: 2px solid {'#FFD700' if is_recommended else '#2196F3'}; border-radius: 15px; padding: 20px; margin: 10px 0; background: linear-gradient(135deg, {'#fffacd' if is_recommended else '#e3f2fd'} 0%, {'#f0e68c' if is_recommended else '#bbdefb'} 100%);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="color: {'#ff8c00' if is_recommended else '#1565c0'}; margin: 0;">🏪 {market['name']}</h4>
+                        <span style="background: {'#FFD700' if is_recommended else '#2196F3'}; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">{badge}</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <p style="color: {'#ff8c00' if is_recommended else '#1976d2'}; margin: 5px 0;">📏 Distance: {market['distance']}</p>
+                        <p style="color: {'#ff8c00' if is_recommended else '#1976d2'}; margin: 5px 0;">💰 Est. Price: ₹{prices['min']}-{prices['max']}/kg</p>
+                    </div>
+                    <p style="color: {'#ff8c00' if is_recommended else '#1976d2'}; margin: 5px 0;">🏠 Address: {market['address']}</p>
+                    {f'<p style="color: #d32f2f; margin: 5px 0; font-weight: bold;">🌟 Top choice for {crop} - Best prices guaranteed!</p>' if is_recommended else ''}
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Additional Market Information
+            st.markdown("---")
+            st.markdown("### 📋 Important Market Information")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"""
+                <div style="border: 1px solid #4CAF50; border-radius: 10px; padding: 15px; background: #e8f5e8;">
+                    <h4 style="color: #2e7d32;">📦 Storage Guidelines</h4>
+                    <p style="color: #388e3c;">{prices['storage']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div style="border: 1px solid #FF9800; border-radius: 10px; padding: 15px; background: #fff3e0;">
+                    <h4 style="color: #e65100;">🚚 Transport Tips</h4>
+                    <p style="color: #f57c00;">{prices['transport']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+            <div style="border: 1px solid #9C27B0; border-radius: 10px; padding: 15px; background: #f3e5f5;">
+                <h4 style="color: #6a1b9a;">💡 Price Factors</h4>
+                <p style="color: #7b1fa2;">{prices['price_factors']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Value Addition Opportunities
+            st.markdown("---")
+            st.markdown("### 🚀 Value Addition Opportunities")
+            
+            value_addition_ideas = {
+                'tomato': ['🍅 Tomato Ketchup/Sauce', '🥫 Canned Tomatoes', '🧂 Tomato Powder', '🍷 Tomato Juice'],
+                'maize': ['🌽 Corn Flour', '🍿 Popcorn', '🌾 Animal Feed', '🧈 Corn Oil'],
+                'rice': ['🍚 Rice Flour', '🍜 Rice Noodles', '🍶 Rice Wine', '🥮 Rice Cakes'],
+                'cotton': ['🧵 Cotton Thread', '👕 Cotton Fabric', '🏥 Cotton Medical Supplies', '💊 Cotton Seed Oil'],
+                'ragi': ['🌾 Ragi Flour', '🥘 Ragi Porridge', '🍪 Ragi Biscuits', '🥤 Ragi Health Drinks'],
+                'cabbage': ['🥗 Cabbage Salad', '🥒 Pickled Cabbage', '🍲 Cabbage Soup', '🥬 Cabbage Rolls']
+            }
+            
+            if crop in value_addition_ideas:
+                st.markdown("Consider these value addition options to increase your profits:")
+                for idea in value_addition_ideas[crop]:
+                    st.markdown(f"- {idea}")
+            
+            # Motivational Message
+            st.markdown("---")
+            st.markdown("### 🌾 Congratulations on Successful Harvest!")
+            st.markdown("**💪 Dear Farmer, your hard work and dedication have paid off! You've successfully completed your farming cycle. May your harvest bring prosperity and joy to you and your family! Best wishes for selling your produce at the best prices! 🚜✨**")
+            
+            # Action Buttons
+            st.markdown("---")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                if st.button("📈 View Market Rates", use_container_width=True):
+                    st.session_state.page = "market"
+                    st.rerun()
+            
+            with col2:
+                if st.button("💼 Selling Strategies", use_container_width=True):
+                    st.session_state.page = "selling_strategy"
+                    st.rerun()
+            
+            with col3:
+                if st.button("🏛️ Government Subsidies", use_container_width=True):
+                    st.session_state.page = "government_subsidy"
+                    st.rerun()
         else:
             st.info("Market data for this crop is being updated. Please check back later.")
-        
-        if progress == 1.0:
-            st.success("🎉 Congratulations! All farming days completed. Ready for harvest!")
-            if st.button("📈 View Market Rates", use_container_width=True):
-                st.session_state.page = "market"
-                st.rerun()
 
 # ==================== PAGE: PROFILE ====================
 elif st.session_state.page == "profile":
     
-    if st.button("⬅️ Back to Dashboard"):
+    if st.button("⬅️ " + get_translated_text("back_to_dashboard", st.session_state.language)):
         st.session_state.page = "dashboard"
         st.rerun()
     
-    st.title("👤 Profile Settings")
+    st.title("👤 " + get_translated_text("profile_settings", st.session_state.language))
     
     if st.session_state.user:
-        st.markdown("### Your Profile Information")
+        st.markdown("### " + get_translated_text("personal_details", st.session_state.language))
         
         col1, col2 = st.columns(2)
         
         with col1:
             st.markdown(f"""
             <div class="card">
-                <h3>👨‍🌾 Personal Details</h3>
-                <p><strong>Name:</strong> {st.session_state.user['username']}</p>
-                <p><strong>Email:</strong> {st.session_state.user['email']}</p>
-                <p><strong>Designation:</strong> Farmer</p>
-                <p><strong>Role:</strong> Agricultural Producer</p>
+                <h3>👨‍🌾 {get_translated_text('personal_details', st.session_state.language)}</h3>
+                <p><strong>{get_translated_text('name', st.session_state.language)}:</strong> {st.session_state.user['username']}</p>
+                <p><strong>{get_translated_text('email', st.session_state.language)}:</strong> {st.session_state.user['email']}</p>
+                <p><strong>{get_translated_text('designation', st.session_state.language)}:</strong> Farmer</p>
+                <p><strong>{get_translated_text('role', st.session_state.language)}:</strong> Agricultural Producer</p>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
             st.markdown(f"""
             <div class="card">
-                <h3>📊 Account Status</h3>
-                <p><strong>Member Since:</strong> {datetime.datetime.now().strftime('%B %Y')}</p>
-                <p><strong>Status:</strong> Active Farmer</p>
-                <p><strong>Verified:</strong> ✅ Yes</p>
+                <h3>📊 {get_translated_text('account_status', st.session_state.language)}</h3>
+                <p><strong>{get_translated_text('member_since', st.session_state.language)}:</strong> {datetime.datetime.now().strftime('%B %Y')}</p>
+                <p><strong>{get_translated_text('status', st.session_state.language)}:</strong> Active Farmer</p>
+                <p><strong>{get_translated_text('verified', st.session_state.language)}:</strong> ✅ Yes</p>
             </div>
             """, unsafe_allow_html=True)
         
         st.markdown("---")
-        st.markdown("### 🌾 Farming Activity")
+        st.markdown("### 🌾 " + get_translated_text("farming_activity", st.session_state.language))
         
         if st.session_state.farming_plan:
             plan = st.session_state.farming_plan
-            st.write(f"**Current Crop:** {plan.get('crop', 'None')}")
-            st.write(f"**Land Area:** {plan.get('area', 0)} acres")
-            st.write(f"**Start Date:** {plan.get('start_date', 'Not set')}")
+            st.write(f"**{get_translated_text('current_crop', st.session_state.language)}:** {plan.get('crop', 'None')}")
+            st.write(f"**{get_translated_text('land_area', st.session_state.language)}:** {plan.get('area', 0)} acres")
+            st.write(f"**{get_translated_text('start_date', st.session_state.language)}:** {plan.get('start_date', 'Not set')}")
         else:
             st.info("No active farming plan. Start farming to see your activity here!")
 
 # ==================== PAGE: NEWS ====================
 elif st.session_state.page == "news":
     
-    if st.button("⬅️ Back to Dashboard"):
+    if st.button("⬅️ " + get_translated_text("back_to_dashboard", st.session_state.language)):
         st.session_state.page = "dashboard"
         st.rerun()
     
-    st.title("📰 Agriculture News")
+    st.title("📰 " + get_translated_text("agriculture_news", st.session_state.language))
     
     source_name, news_items = get_daily_agri_news()
-    st.markdown(f"### Today’s top agriculture headlines from {source_name}")
+    st.markdown(f"### {get_translated_text('todays_headlines', st.session_state.language)} from {source_name}")
     st.markdown("Stay updated with rotating newspaper-style coverage and crop market trends.")
     for item in news_items:
         st.markdown(f"""
         <div class="card">
             <h3>{item['title']}</h3>
             <p>{item['summary']}</p>
-            <small><strong>Source:</strong> {item['source']} | <strong>Date:</strong> {item['date']}</small>
+            <small><strong>{get_translated_text('source', st.session_state.language)}:</strong> {item['source']} | <strong>{get_translated_text('date', st.session_state.language)}:</strong> {item['date']}</small>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("---")
@@ -1643,11 +2339,11 @@ elif st.session_state.page == "selling_strategy":
 # ==================== PAGE: GOVERNMENT SUBSIDY ====================
 elif st.session_state.page == "government_subsidy":
     
-    if st.button("⬅️ Back to Dashboard"):
+    if st.button("⬅️ " + get_translated_text("back_to_dashboard", st.session_state.language)):
         st.session_state.page = "dashboard"
         st.rerun()
     
-    st.title("🏛️ Government Subsidies")
+    st.title("🏛️ " + get_translated_text("government_subsidies", st.session_state.language))
     st.markdown("### Support schemes and subsidy programs for farmers")
     st.image("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=compress&cs=tinysrgb&h=400&w=800", use_column_width=True)
     
